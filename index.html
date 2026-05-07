@@ -1,70 +1,173 @@
-·
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inbox Triage Â· Blume Ventures</title>
+<style>
+:root {
+  --indigo: #4f46e5;
+  --indigo-dark: #4338ca;
+  --red: #dc2626;
+  --amber: #d97706;
+  --blue: #2563eb;
+  --green: #16a34a;
+  --gray: #6b7280;
+  --bg: #f5f6fa;
+  --card: #ffffff;
+  --border: #e5e7eb;
+  --text: #111827;
+  --muted: #6b7280;
+  --light: #f9fafb;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); font-size: 13px; min-height: 100vh; }
 
-  .ptag {
-    display: inline-flex; align-items: center; gap: 4px;
-    padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 700;
-  }
-  .ptag-p1 { background:#fff0f0; color:#c0392b; }
-  .ptag-p2 { background:#fff8e6; color:#d97706; }
-  .ptag-p3 { background:#eef4ff; color:#2563eb; }
-  .ptag-p4 { background:#f0fdf4; color:#16a34a; }
-  .ptag-p5 { background:#f5f5f5; color:#6b7280; }
+/* ââ Auth ââ */
+#authScreen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; background: linear-gradient(135deg, #eef2ff 0%, #f5f3ff 100%); }
+.auth-card { background: #fff; border: 1px solid var(--border); border-radius: 20px; padding: 44px 40px; max-width: 420px; width: 100%; text-align: center; box-shadow: 0 8px 40px rgba(79,70,229,0.10); }
+.auth-logo { font-size: 40px; margin-bottom: 14px; }
+.auth-title { font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 6px; letter-spacing: -0.02em; }
+.auth-sub { font-size: 13px; color: var(--muted); margin-bottom: 30px; line-height: 1.6; }
+.google-btn {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; padding: 13px 20px; background: #fff; border: 1.5px solid #dadce0;
+  border-radius: 10px; font-size: 14px; font-weight: 600; color: #3c4043;
+  cursor: pointer; transition: all 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.google-btn:hover { background: #f8f9fa; box-shadow: 0 3px 12px rgba(0,0,0,0.12); transform: translateY(-1px); }
+.google-icon { width: 18px; height: 18px; flex-shrink: 0; }
+.auth-note { font-size: 11px; color: #9ca3af; margin-top: 20px; line-height: 1.6; }
+.auth-divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+.steps { display: flex; flex-direction: column; gap: 10px; text-align: left; }
+.step { display: flex; gap: 12px; align-items: flex-start; }
+.step-num { background: var(--indigo); color: #fff; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+.step-text { font-size: 12px; color: #555; line-height: 1.5; }
 
-  .action-chip {
-    font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 10px;
-  }
-  .achip-p1 { background:#c0392b; color:#fff; }
-  .achip-p2 { background:#d97706; color:#fff; }
-  .achip-p3 { background:#2563eb; color:#fff; }
-  .achip-p4 { background:#16a34a; color:#fff; }
-  .achip-p5 { background:#9ca3af; color:#fff; }
+/* ââ App ââ */
+#app { display: none; }
 
-  .cat-label { font-size: 11px; color: #aaa; }
+.topbar {
+  background: #fff; border-bottom: 1px solid var(--border);
+  padding: 0 24px; height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+}
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-icon { font-size: 20px; }
+.brand-name { font-size: 15px; font-weight: 800; color: var(--text); letter-spacing: -0.02em; }
+.brand-tag { font-size: 11px; color: var(--muted); font-weight: 400; }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+.last-upd { font-size: 11px; color: #9ca3af; }
 
-  .email-card {
-    background: #fff; border: 1px solid #e8eaed; border-radius: 8px;
-    padding: 11px 14px; margin-bottom: 6px; cursor: pointer;
-    transition: box-shadow 0.15s, border-color 0.15s;
-    display: flex; align-items: flex-start; gap: 12px;
-    text-decoration: none;
-  }
-  .email-card:hover { box-shadow: 0 2px 10px rgba(0,0,0,0.08); border-color: #c7d0e0; }
+.btn-refresh {
+  background: var(--indigo); color: #fff; border: none; border-radius: 8px;
+  padding: 7px 16px; font-size: 12px; font-weight: 600; cursor: pointer;
+  display: flex; align-items: center; gap: 6px; transition: background 0.15s;
+  letter-spacing: 0.01em;
+}
+.btn-refresh:hover { background: var(--indigo-dark); }
+.btn-refresh:disabled { opacity: 0.55; pointer-events: none; }
+.btn-signout {
+  background: none; border: 1px solid var(--border); border-radius: 8px;
+  padding: 6px 12px; font-size: 11px; color: var(--muted); cursor: pointer; transition: all 0.15s;
+}
+.btn-signout:hover { background: var(--light); border-color: #d1d5db; }
 
-  .ecard-left { flex: 1; min-width: 0; }
-  .ecard-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
+/* ââ Filter pills ââ */
+.filter-bar {
+  display: flex; gap: 6px; padding: 12px 24px; background: #fff;
+  border-bottom: 1px solid var(--border); overflow-x: auto; flex-wrap: nowrap;
+}
+.filter-bar::-webkit-scrollbar { display: none; }
+.pill {
+  display: inline-flex; align-items: center; gap: 5px; padding: 5px 13px;
+  border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer;
+  border: 2px solid transparent; white-space: nowrap; transition: all 0.15s; user-select: none;
+}
+.pill:hover { filter: brightness(0.96); }
+.pill.active { border-color: currentColor; box-shadow: 0 0 0 3px rgba(0,0,0,0.06); }
+.pill-cnt { background: rgba(0,0,0,0.12); border-radius: 10px; padding: 1px 6px; font-size: 10px; min-width: 18px; text-align: center; }
 
-  .efrom { font-weight: 600; font-size: 12px; color: #1a1a2e; margin-bottom: 2px; }
-  .esubj { font-size: 12px; color: #374151; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 560px; }
-  .esnip { font-size: 11px; color: #9ca3af; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 560px; margin-top: 2px; }
-  .edate { font-size: 10px; color: #9ca3af; }
-  .emsgcnt { font-size: 10px; color: #aaa; }
+.pill-all  { background: #f3f4f6; color: #374151; }
+.pill-p1   { background: #fef2f2; color: #dc2626; }
+.pill-p2   { background: #fffbeb; color: #d97706; }
+.pill-p3   { background: #eff6ff; color: #2563eb; }
+.pill-p4   { background: #f0fdf4; color: #16a34a; }
+.pill-p5   { background: #f9fafb; color: #6b7280; }
 
-  .ttags { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; }
-  .ttag { background:#f3f4f6; color:#6b7280; font-size:10px; padding:1px 6px; border-radius:8px; }
+/* ââ Main ââ */
+.main { padding: 20px 24px; max-width: 960px; margin: 0 auto; }
 
-  .empty { text-align:center; padding:50px 20px; color:#aaa; }
+.section-group { margin-bottom: 4px; }
+.section-group.hidden { display: none; }
 
-  .spinner-wrap { display:none; position:fixed; inset:0; background:rgba(255,255,255,0.85); z-index:999; justify-content:center; align-items:center; flex-direction:column; gap:10px; }
-  .spinner-wrap.on { display:flex; }
-  .spin { width:36px; height:36px; border:3px solid #e8eaed; border-top-color:#4f46e5; border-radius:50%; animation:rot 0.7s linear infinite; }
-  @keyframes rot { to { transform:rotate(360deg); } }
-  .spin-msg { font-size:13px; color:#555; }
+.section-hdr {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 12px 0 8px; border-bottom: 1px solid #f0f0f8; margin-bottom: 6px;
+}
+.ptag {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; letter-spacing: 0.02em;
+}
+.ptag-p1 { background: #fef2f2; color: #dc2626; }
+.ptag-p2 { background: #fffbeb; color: #d97706; }
+.ptag-p3 { background: #eff6ff; color: #2563eb; }
+.ptag-p4 { background: #f0fdf4; color: #16a34a; }
+.ptag-p5 { background: #f9fafb; color: #6b7280; }
 
-  .last-upd { font-size:10px; color:#aaa; }
+.section-label { font-size: 12px; font-weight: 700; color: var(--text); }
+.section-sub { font-size: 11px; color: var(--muted); }
+.action-chip {
+  font-size: 10px; font-weight: 700; padding: 2px 9px; border-radius: 10px;
+  letter-spacing: 0.03em; text-transform: uppercase;
+}
+.achip-p1 { background: #dc2626; color: #fff; }
+.achip-p2 { background: #d97706; color: #fff; }
+.achip-p3 { background: #2563eb; color: #fff; }
+.achip-p4 { background: #16a34a; color: #fff; }
+.achip-p5 { background: #9ca3af; color: #fff; }
+
+/* ââ Email cards ââ */
+.email-card {
+  background: #fff; border: 1px solid var(--border); border-radius: 10px;
+  padding: 12px 16px; margin-bottom: 5px; cursor: pointer;
+  transition: box-shadow 0.15s, border-color 0.15s, transform 0.1s;
+  display: flex; align-items: flex-start; gap: 14px; text-decoration: none; color: inherit;
+}
+.email-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); border-color: #c7d0e0; transform: translateY(-1px); }
+.ecard-left { flex: 1; min-width: 0; }
+.ecard-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
+.e-from { font-weight: 700; font-size: 12px; color: var(--text); margin-bottom: 2px; }
+.e-subj { font-size: 12px; color: #374151; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 600px; font-weight: 500; }
+.e-snip { font-size: 11px; color: #9ca3af; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 600px; margin-top: 3px; }
+.e-date { font-size: 11px; color: #9ca3af; font-weight: 500; }
+.e-cnt { font-size: 10px; color: #d1d5db; background: #f3f4f6; border-radius: 8px; padding: 1px 6px; }
+.ttags { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 5px; }
+.ttag { background: #f3f4f6; color: #6b7280; font-size: 10px; padding: 1px 7px; border-radius: 8px; }
+
+.empty { text-align: center; padding: 60px 20px; color: #9ca3af; font-size: 14px; }
+
+/* ââ Spinner ââ */
+.spinner-wrap { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.88); z-index: 999; justify-content: center; align-items: center; flex-direction: column; gap: 12px; backdrop-filter: blur(2px); }
+.spinner-wrap.on { display: flex; }
+.spin { width: 36px; height: 36px; border: 3px solid #e5e7eb; border-top-color: var(--indigo); border-radius: 50%; animation: rot 0.7s linear infinite; }
+@keyframes rot { to { transform: rotate(360deg); } }
+.spin-msg { font-size: 13px; color: #555; font-weight: 500; }
 </style>
 </head>
 <body>
-</style>
-</head>
-<body>
 
+<!-- Auth Screen -->
 <div id="authScreen">
   <div class="auth-card">
-    <div class="auth-logo">📬</div>
+    <div class="auth-logo">ð¬</div>
     <div class="auth-title">Blume Inbox Triage</div>
     <div class="auth-sub">AI-powered email prioritisation for<br>finance, compliance &amp; operations</div>
+
     <button class="google-btn" onclick="signIn()">
-      <svg class="google-icon" viewBox="0 0 24 24">
+      <svg class="google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
         <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
         <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
@@ -72,287 +175,300 @@
       </svg>
       Sign in with Google
     </button>
-    <div class="setup-steps">
-      <div class="setup-step"><span class="step-num">1</span><span>Click "Sign in with Google" above</span></div>
-      <div class="setup-step"><span class="step-num">2</span><span>Grant Gmail read access (read-only, never modifies)</span></div>
-      <div class="setup-step"><span class="step-num">3</span><span>Your inbox is classified in real-time by P1-P5 priority</span></div>
+
+    <hr class="auth-divider">
+
+    <div class="steps">
+      <div class="step"><span class="step-num">1</span><span class="step-text">Click "Sign in with Google" and grant Gmail read-only access</span></div>
+      <div class="step"><span class="step-num">2</span><span class="step-text">Your last 14 days of inbox is fetched and classified P1âP5</span></div>
+      <div class="step"><span class="step-num">3</span><span class="step-text">Click any email to open it directly in Gmail</span></div>
     </div>
-    <div class="auth-note">Read-only Gmail access · No emails stored · Runs entirely in your browser</div>
+
+    <div class="auth-note">ð Read-only Â· No emails stored Â· Runs entirely in your browser</div>
   </div>
 </div>
 
+<!-- Main App -->
 <div id="app">
-  <div class="spinner-wrap" id="spinner"><div class="spin"></div><div class="spin-msg" id="spinMsg">Fetching emails...</div></div>
-  <div class="header">
-    <div class="header-brand">
+  <div class="spinner-wrap" id="spinner">
+    <div class="spin"></div>
+    <div class="spin-msg" id="spinMsg">Fetching emails...</div>
+  </div>
+
+  <div class="topbar">
+    <div class="brand">
+      <span class="brand-icon">ð¬</span>
       <div>
-        <div class="header-title">📬 Inbox Triage <span style="font-weight:400;font-size:12px;color:#aaa">· Blume Ventures</span></div>
-        <div class="header-sub">Last 14 days · P1-P5 framework</div>
+        <span class="brand-name">Inbox Triage</span>
+        <span class="brand-tag"> Â· Blume Ventures</span>
       </div>
     </div>
-    <div class="header-actions">
+    <div class="topbar-right">
       <span class="last-upd" id="lastUpd"></span>
-      <button class="refresh-btn" id="refreshBtn" onclick="loadEmails()">↻ Refresh</button>
-      <button class="signout-btn" onclick="signOut()">Sign out</button>
+      <button class="btn-refresh" id="refreshBtn" onclick="loadEmails()">â» Refresh</button>
+      <button class="btn-signout" onclick="signOut()">Sign out</button>
     </div>
   </div>
-  <div class="summary-bar">
-    <div class="pill pill-all active" id="pill-all" onclick="filterBy('all')">All <span class="cnt" id="cnt-all">-</span></div>
-    <div class="pill pill-p1" id="pill-p1" onclick="filterBy('P1')">P1 · SEBI/Regulatory <span class="cnt" id="cnt-p1">0</span></div>
-    <div class="pill pill-p2" id="pill-p2" onclick="filterBy('P2')">P2 · Investor/LP <span class="cnt" id="cnt-p2">0</span></div>
-    <div class="pill pill-p3" id="pill-p3" onclick="filterBy('P3')">P3 · Portfolio Co <span class="cnt" id="cnt-p3">0</span></div>
-    <div class="pill pill-p4" id="pill-p4" onclick="filterBy('P4')">P4 · Internal Team <span class="cnt" id="cnt-p4">0</span></div>
-    <div class="pill pill-p5" id="pill-p5" onclick="filterBy('P5')">P5 · Vendors/FYI <span class="cnt" id="cnt-p5">0</span></div>
+
+  <div class="filter-bar">
+    <div class="pill pill-all active" id="pill-all" onclick="filterBy('all')">All <span class="pill-cnt" id="cnt-all">â</span></div>
+    <div class="pill pill-p1" id="pill-p1" onclick="filterBy('P1')">ð´ P1 Â· SEBI / Regulatory <span class="pill-cnt" id="cnt-p1">0</span></div>
+    <div class="pill pill-p2" id="pill-p2" onclick="filterBy('P2')">ð¡ P2 Â· Investor / LP <span class="pill-cnt" id="cnt-p2">0</span></div>
+    <div class="pill pill-p3" id="pill-p3" onclick="filterBy('P3')">ðµ P3 Â· Portfolio Co <span class="pill-cnt" id="cnt-p3">0</span></div>
+    <div class="pill pill-p4" id="pill-p4" onclick="filterBy('P4')">ð¢ P4 Â· Internal Team <span class="pill-cnt" id="cnt-p4">0</span></div>
+    <div class="pill pill-p5" id="pill-p5" onclick="filterBy('P5')">âª P5 Â· Vendors / FYI <span class="pill-cnt" id="cnt-p5">0</span></div>
   </div>
-  <div class="main" id="mainContent"><div class="empty">Loading...</div></div>
+
+  <div class="main" id="mainContent">
+    <div class="empty">Loading your inboxâ¦</div>
+  </div>
 </div>
 
 <script>
-    const CLIENT_ID = '810845823256-1gsm8sivbdjrovkoeedlaek9rulrtliv.apps.googleusercontent.com';
-    const SCOPES = 'https://www.googleapis.com/auth/gmail.readonly';
-    let tokenClient;
-    let accessToken = null;
-    let currentFilter = 'all';
+const CLIENT_ID = '810845823256-1gsm8sivbdjrovkoeedlaek9rulrtliv.apps.googleusercontent.com';
+const SCOPES = 'https://www.googleapis.com/auth/gmail.readonly';
+let tokenClient, accessToken = null, currentFilter = 'all';
 
-    function loadGoogleLibraries() {
-      return new Promise(resolve => {
-        if (window.google && window.google.accounts) { resolve(); return; }
-        const s = document.createElement('script');
-        s.src = 'https://accounts.google.com/gsi/client';
-        s.onload = resolve;
-        document.head.appendChild(s);
-    });
-    }
+function loadGIS() {
+  return new Promise(resolve => {
+    if (window.google && window.google.accounts) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = 'https://accounts.google.com/gsi/client';
+    s.onload = resolve;
+    document.head.appendChild(s);
+  });
+}
 
-    async function signIn() {
-      await loadGoogleLibraries();
-      tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: CLIENT_ID,
-        scope: SCOPES,
-        callback: (resp) => {
-          if (resp.error) { alert('Sign-in failed: ' + resp.error); return; }
-          accessToken = resp.access_token;
-          localStorage.setItem('gmail_token', accessToken);
-          document.getElementById('authScreen').style.display = 'none';
-          document.getElementById('app').style.display = 'block';
-          loadEmails();
+async function signIn() {
+  await loadGIS();
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID, scope: SCOPES,
+    callback: (resp) => {
+      if (resp.error) { alert('Sign-in failed: ' + resp.error); return; }
+      accessToken = resp.access_token;
+      localStorage.setItem('gmail_token', accessToken);
+      show('app'); hide('authScreen');
+      loadEmails();
     }
-    });
-      tokenClient.requestAccessToken({ prompt: '' });
+  });
+  tokenClient.requestAccessToken({ prompt: '' });
 }
 
 function signOut() {
-      if (accessToken) google.accounts.oauth2.revoke(accessToken);
+  if (accessToken) google.accounts.oauth2.revoke(accessToken);
   accessToken = null;
   localStorage.removeItem('gmail_token');
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('authScreen').style.display = 'flex';
+  show('authScreen'); hide('app');
 }
 
+function show(id) { document.getElementById(id).style.display = id === 'authScreen' ? 'flex' : 'block'; }
+function hide(id) { document.getElementById(id).style.display = 'none'; }
+
 window.addEventListener('load', async () => {
-    const saved = localStorage.getItem('gmail_token');
-  if (saved) {
-    accessToken = saved;
-    document.getElementById('authScreen').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    loadEmails();
-  }
+  const saved = localStorage.getItem('gmail_token');
+  if (saved) { accessToken = saved; show('app'); hide('authScreen'); loadEmails(); }
 });
 
 async function gmailFetch(url) {
   const res = await fetch(url, { headers: { Authorization: 'Bearer ' + accessToken } });
-  if (res.status === 401) { signOut(); throw new Error('Session expired'); }
+  if (res.status === 401) { signOut(); throw new Error('Session expired â please sign in again'); }
   return res.json();
 }
 
 async function fetchThreadList() {
-  const now = Math.floor(Date.now() / 1000);
-  const since = now - (14 * 86400);
-  const url = `https://gmail.googleapis.com/gmail/v1/users/me/threads?maxResults=50&q=in:inbox after:${since}&fields=threads(id,snippet)`;
-  const data = await gmailFetch(url);
+  const since = Math.floor(Date.now() / 1000) - (14 * 86400);
+  const data = await gmailFetch(`https://gmail.googleapis.com/gmail/v1/users/me/threads?maxResults=50&q=in:inbox after:${since}&fields=threads(id,snippet)`);
   return data.threads || [];
 }
 
-async function fetchThreadDetail(threadId) {
-  const url = `https://gmail.googleapis.com/gmail/v1/users/me/threads/${threadId}?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=Date`;
-  return gmailFetch(url);
+async function fetchThreadDetail(id) {
+  return gmailFetch(`https://gmail.googleapis.com/gmail/v1/users/me/threads/${id}?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=Date`);
 }
 
+// ââ Priority engine ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 const PRIORITIES = {
-    P1: {
-    label: 'SEBI / Regulatory', sub: 'Legal & compliance alerts', action: 'Reply same day',
-          icon: 'P1', achip: 'achip-p1', ptag: 'ptag-p1',
-          triggers: ['sebi','compliance','penalty','adjudication','show cause','circular','aif regulation',
-                     'regulatory','placement memorandum','ppm','fatca','ckyc','kyc','aml','compliance certificate',
-                     'statutory auditor','tds payment','nsdl','sebi qcr','annual report sebi',
-                     'foreign remittance','fctrs','neft','rtgs','tds instruction','tds'],
-      },
-        P2: {
-    label: 'Investor / LP Queries', sub: 'Legal docs, drawdowns', action: 'Reply within 24h',
-          icon: 'P2', achip: 'achip-p2', ptag: 'ptag-p2',
-          triggers: ['capital call','distribution','drawdown','nav','statement','agreement','lp query',
-                     'unit capital','management fees','cas working','escrow','mtm','blume fund v',
-                     'co-sponsor','carry','axis max life','quarterly aif','drawdown mis',
-                     'life of funds','statutory audit','audit requirement','preliminary requirement',
-                     'draft financial','financial statements','audit fy','rta appointment'],
-      },
-        P3: {
-    label: 'Portfolio Company', sub: 'MIS, financials, board', action: 'Reply within 48h',
-          icon: 'P3', achip: 'achip-p3', ptag: 'ptag-p3',
-          triggers: ['board approval','consent','mis','investment','term sheet','portco',
-                     'portfolio','kirtane pandit','mska','bdo','performance review',
-                     'software confirmation','spoc details','fund admin update'],
-      },
-        P4: {
+  P1: {
+    label: 'SEBI / Regulatory', sub: 'Legal & compliance', action: 'Reply same day',
+    ptag: 'ptag-p1', achip: 'achip-p1',
+    triggers: ['sebi','compliance','penalty','adjudication','show cause','circular','aif regulation',
+      'regulatory','placement memorandum','ppm','fatca','ckyc','kyc','aml','compliance certificate',
+      'statutory auditor','tds payment','nsdl','sebi qcr','annual report sebi',
+      'foreign remittance','fctrs','neft','rtgs','tds instruction','tds'],
+  },
+  P2: {
+    label: 'Investor / LP', sub: 'Drawdowns, NAV, legal docs', action: 'Reply within 24h',
+    ptag: 'ptag-p2', achip: 'achip-p2',
+    triggers: ['capital call','distribution','drawdown','nav','statement','agreement','lp query',
+      'unit capital','management fees','cas working','escrow','mtm','blume fund v',
+      'co-sponsor','carry','axis max life','quarterly aif','drawdown mis',
+      'life of funds','statutory audit','audit requirement','preliminary requirement',
+      'draft financial','financial statements','audit fy','rta appointment'],
+  },
+  P3: {
+    label: 'Portfolio Company', sub: 'MIS, board, financials', action: 'Reply within 48h',
+    ptag: 'ptag-p3', achip: 'achip-p3',
+    triggers: ['board approval','consent','mis','investment','term sheet','portco',
+      'portfolio','kirtane pandit','mska','bdo','performance review',
+      'software confirmation','spoc details','fund admin update'],
+  },
+  P4: {
     label: 'Internal Team', sub: 'Ops, HR, admin', action: 'Reply within 72h',
-          icon: 'P4', achip: 'achip-p4', ptag: 'ptag-p4',
+    ptag: 'ptag-p4', achip: 'achip-p4',
     triggers: ['approval needed','sign off','review by','internal','granola',
-                     'meeting notes','monday mindshare','kra review','goalsetting','invitation',
-               'updated invitation','co-sponsor llp','finance to do','blume team'],
-      },
-        P5: {
-    label: 'Vendors / Newsletters', sub: 'FYI, no action needed', action: 'Mark read / archive',
-          icon: 'P5', achip: 'achip-p5', ptag: 'ptag-p5',
-          triggers: ['invoice','subscription','newsletter','fyi','unsubscribe','salesforce',
-                     'superhuman','zapier','zoom notification','fixed deposit','valuation masterclass',
-                     'applied valuation','claude usage','masterclass','webinar','marketing'],
-},
+      'meeting notes','monday mindshare','kra review','goalsetting','invitation',
+      'updated invitation','co-sponsor llp','finance to do','blume team'],
+  },
+  P5: {
+    label: 'Vendors / FYI', sub: 'Newsletters, no action', action: 'Mark read / archive',
+    ptag: 'ptag-p5', achip: 'achip-p5',
+    triggers: ['invoice','subscription','newsletter','fyi','unsubscribe','salesforce',
+      'superhuman','zapier','zoom notification','fixed deposit','valuation masterclass',
+      'applied valuation','claude usage','masterclass','webinar','marketing'],
+  },
 };
 
-function getHeader(headers, name) {
-  const h = (headers||[]).find(x => x.name.toLowerCase() === name.toLowerCase());
-  return h ? h.value : '';
+function hdr(headers, name) {
+  return (headers || []).find(h => h.name.toLowerCase() === name.toLowerCase())?.value || '';
 }
 
 function classify(thread) {
-    const msgs = thread.messages || [];
+  const msgs = thread.messages || [];
   if (!msgs.length) return { priority: 'P5', matched: [], def: PRIORITIES.P5 };
-  const firstMsg = msgs[0];
-  const subject = getHeader(firstMsg?.payload?.headers, 'Subject').toLowerCase();
-  const from    = getHeader(firstMsg?.payload?.headers, 'From').toLowerCase();
-  const snippet = (firstMsg?.snippet || '').toLowerCase();
-  const all = subject + ' ' + from + ' ' + snippet;
+  const first = msgs[0];
+  const all = [
+    hdr(first.payload?.headers, 'Subject'),
+    hdr(first.payload?.headers, 'From'),
+    first.snippet || ''
+  ].join(' ').toLowerCase();
+
   for (const [key, def] of Object.entries(PRIORITIES)) {
     const matched = def.triggers.filter(t => all.includes(t));
     if (matched.length) return { priority: key, matched, def };
-}
-  if (from.includes('blume.vc') || from.includes('ctltrustee') ||
-      from.includes('avegapro') || from.includes('basizfa') ||
-      from.includes('vistra') || from.includes('mska.in')) {
-    return { priority: 'P4', matched: ['blume-internal'], def: PRIORITIES.P4 };
-}
+  }
+  const from = hdr(first.payload?.headers, 'From').toLowerCase();
+  if (['blume.vc','ctltrustee','avegapro','basizfa','vistra','mska.in'].some(d => from.includes(d)))
+    return { priority: 'P4', matched: ['blume-domain'], def: PRIORITIES.P4 };
   return { priority: 'P5', matched: [], def: PRIORITIES.P5 };
 }
 
-function fmtDate(internalDate) {
-  if (!internalDate) return '';
-  const d = new Date(parseInt(internalDate));
-  const now = new Date();
-  if (now - d < 86400000) return d.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
-  return d.toLocaleDateString('en-IN', { day:'numeric', month:'short' });
+function fmtDate(ts) {
+  if (!ts) return '';
+  const d = new Date(parseInt(ts)), now = new Date();
+  if (now - d < 86400000) return d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+  if (now - d < 7 * 86400000) return d.toLocaleDateString('en-IN', { weekday: 'short' });
+  return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
 }
 
-function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function trunc(s, n) { return s && s.length > n ? s.slice(0,n)+'...' : (s||''); }
+function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function trunc(s, n) { return s && s.length > n ? s.slice(0, n) + 'â¦' : (s || ''); }
 
+// ââ Render âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function renderEmails(classified) {
   const groups = { P1:[], P2:[], P3:[], P4:[], P5:[] };
   classified.forEach(item => groups[item.priority].push(item));
+
   document.getElementById('cnt-all').textContent = classified.length;
   ['P1','P2','P3','P4','P5'].forEach(p =>
-    document.getElementById('cnt-'+p.toLowerCase()).textContent = groups[p].length);
+    document.getElementById('cnt-' + p.toLowerCase()).textContent = groups[p].length);
+
   if (!classified.length) {
-    document.getElementById('mainContent').innerHTML = '<div class="empty">No emails in the last 14 days</div>';
+    document.getElementById('mainContent').innerHTML = '<div class="empty">ð No emails in the last 14 days</div>';
     return;
-}
+  }
+
   let html = '';
   for (const pKey of ['P1','P2','P3','P4','P5']) {
     const items = groups[pKey];
     if (!items.length) continue;
     const def = PRIORITIES[pKey];
-    const hidden = currentFilter !== 'all' && currentFilter !== pKey ? ' hidden' : '';
-    html += '<div class="section-group' + hidden + '" data-priority="' + pKey + '">';
-    html += '<div class="section-header">';
-    html += '<span class="ptag ' + def.ptag + '">' + pKey + '</span>';
-    html += '<span style="font-weight:700;font-size:12px">' + esc(def.label) + '</span>';
-    html += '<span class="cat-label">— ' + esc(def.sub) + '</span>';
-    html += '<span class="action-chip ' + def.achip + '">' + esc(def.action) + '</span>';
-    html += '</div>';
+    const hidden = (currentFilter !== 'all' && currentFilter !== pKey) ? ' hidden' : '';
+
+    html += `<div class="section-group${hidden}" data-priority="${pKey}">
+      <div class="section-hdr">
+        <span class="ptag ${def.ptag}">${pKey}</span>
+        <span class="section-label">${esc(def.label)}</span>
+        <span class="section-sub">â ${esc(def.sub)}</span>
+        <span class="action-chip ${def.achip}">${esc(def.action)}</span>
+      </div>`;
+
     items.forEach(({ thread, matched }) => {
       const msgs = thread.messages || [];
-      const firstMsg = msgs[0];
-      const lastMsg = msgs[msgs.length-1];
-      const subject = getHeader(firstMsg?.payload?.headers, 'Subject') || '(no subject)';
-      const from = getHeader(firstMsg?.payload?.headers, 'From') || '';
-      const senderShort = from.replace(/<.*>/, '').trim() || from.split('@')[0];
-      const snippet = (lastMsg?.snippet || '').replace(/\s+/g,' ');
-      const date = lastMsg?.internalDate || firstMsg?.internalDate;
-      const threadId = thread.id;
-      const tags = matched.slice(0,4);
-      html += '<a class="email-card" href="https://mail.google.com/mail/u/0/#inbox/' + threadId + '" target="_blank" rel="noopener">';
-      html += '<div class="ecard-left">';
-      html += '<div class="efrom">' + esc(trunc(senderShort,40)) + '</div>';
-      html += '<div class="esubj">' + esc(trunc(subject,90)) + '</div>';
-      html += '<div class="esnip">' + esc(trunc(snippet,100)) + '</div>';
-      if (tags.length) html += '<div class="ttags">' + tags.map(t=>'<span class="ttag">'+esc(t)+'</span>').join('') + '</div>';
-      html += '</div>';
-      html += '<div class="ecard-right">';
-      html += '<span class="edate">' + fmtDate(date) + '</span>';
-      if (msgs.length > 1) html += '<span class="emsgcnt">' + msgs.length + ' msgs</span>';
-      html += '</div></a>';
-});
+      const first = msgs[0], last = msgs[msgs.length - 1];
+      const subject = hdr(first?.payload?.headers, 'Subject') || '(no subject)';
+      const from = hdr(first?.payload?.headers, 'From');
+      const sender = from.replace(/<.*>/, '').trim() || from.split('@')[0];
+      const snippet = (last?.snippet || '').replace(/\s+/g, ' ');
+      const date = last?.internalDate || first?.internalDate;
+      const tags = matched.slice(0, 4);
+
+      html += `<a class="email-card" href="https://mail.google.com/mail/u/0/#inbox/${thread.id}" target="_blank" rel="noopener">
+        <div class="ecard-left">
+          <div class="e-from">${esc(trunc(sender, 45))}</div>
+          <div class="e-subj">${esc(trunc(subject, 90))}</div>
+          <div class="e-snip">${esc(trunc(snippet, 110))}</div>
+          ${tags.length ? `<div class="ttags">${tags.map(t => `<span class="ttag">${esc(t)}</span>`).join('')}</div>` : ''}
+        </div>
+        <div class="ecard-right">
+          <span class="e-date">${fmtDate(date)}</span>
+          ${msgs.length > 1 ? `<span class="e-cnt">${msgs.length} msgs</span>` : ''}
+        </div>
+      </a>`;
+    });
+
     html += '</div>';
-}
+  }
   document.getElementById('mainContent').innerHTML = html;
 }
 
 function filterBy(p) {
   currentFilter = p;
   document.querySelectorAll('.pill').forEach(el => el.classList.remove('active'));
-  document.getElementById('pill-'+p.toLowerCase()).classList.add('active');
+  document.getElementById('pill-' + p.toLowerCase()).classList.add('active');
   document.querySelectorAll('.section-group').forEach(el => {
-    if (p === 'all' || el.dataset.priority === p) el.classList.remove('hidden');
-    else el.classList.add('hidden');
-});
+    el.classList.toggle('hidden', p !== 'all' && el.dataset.priority !== p);
+  });
 }
 
+// ââ Load âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 async function loadEmails() {
   const btn = document.getElementById('refreshBtn');
   const spinner = document.getElementById('spinner');
-  btn.disabled = true;
-  btn.textContent = 'Loading...';
+  btn.disabled = true; btn.textContent = 'â» Loadingâ¦';
   spinner.classList.add('on');
+
   try {
-    document.getElementById('spinMsg').textContent = 'Fetching thread list...';
+    document.getElementById('spinMsg').textContent = 'Fetching thread listâ¦';
     const threads = await fetchThreadList();
+
     const detailed = [];
     for (let i = 0; i < threads.length; i += 5) {
-      document.getElementById('spinMsg').textContent = 'Loading threads ' + (i+1) + '-' + Math.min(i+5, threads.length) + ' of ' + threads.length + '...';
-      const batch = threads.slice(i, i+5);
+      document.getElementById('spinMsg').textContent =
+        `Loading threads ${i + 1}â${Math.min(i + 5, threads.length)} of ${threads.length}â¦`;
+      const batch = threads.slice(i, i + 5);
       const results = await Promise.all(batch.map(t => fetchThreadDetail(t.id).catch(() => null)));
       results.forEach(r => r && detailed.push(r));
     }
-    const classified = detailed.map(thread => {
-      const c = classify(thread);
-      return { thread, ...c };
-});
+
+    const classified = detailed.map(thread => ({ thread, ...classify(thread) }));
     classified.sort((a, b) => {
       const order = { P1:0, P2:1, P3:2, P4:3, P5:4 };
       if (a.priority !== b.priority) return order[a.priority] - order[b.priority];
       const da = parseInt(a.thread.messages?.slice(-1)[0]?.internalDate || '0');
       const db = parseInt(b.thread.messages?.slice(-1)[0]?.internalDate || '0');
       return db - da;
-});
+    });
+
     renderEmails(classified);
-    const now = new Date();
-    document.getElementById('lastUpd').textContent = 'Updated ' + now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
-} catch(e) {
-    document.getElementById('mainContent').innerHTML = '<div class="empty" style="color:#c0392b">Error: ' + esc(e.message) + '</div>';
-} finally {
-    btn.disabled = false;
-    btn.textContent = '↻ Refresh';
+    document.getElementById('lastUpd').textContent =
+      'Updated ' + new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+
+  } catch (e) {
+    document.getElementById('mainContent').innerHTML =
+      `<div class="empty" style="color:#dc2626">â ï¸ ${esc(e.message)}</div>`;
+  } finally {
+    btn.disabled = false; btn.textContent = 'â» Refresh';
     spinner.classList.remove('on');
-}
+  }
 }
 </script>
 </body>
