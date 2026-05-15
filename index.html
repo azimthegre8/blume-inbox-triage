@@ -1,304 +1,426 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Blume VC — Inbox Triage</title>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; color: #1a1a2e; }
-  header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: white; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
-  header h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
-  header .subtitle { font-size: 12px; opacity: 0.7; margin-top: 2px; }
-  #signInBtn { background: white; color: #1a1a2e; border: none; padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; }
-  #signInBtn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-  #signInBtn.signed-in { background: #e8f5e9; color: #2e7d32; }
-  .tabs { background: white; border-bottom: 2px solid #e0e0e0; padding: 0 24px; display: flex; gap: 0; }
-  .tab-btn { padding: 14px 20px; border: none; background: none; cursor: pointer; font-size: 14px; font-weight: 500; color: #666; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.2s; white-space: nowrap; }
-  .tab-btn:hover { color: #1a1a2e; background: #f5f5f5; }
-  .tab-btn.active { color: #1a1a2e; border-bottom-color: #e63946; font-weight: 600; }
-  .tab-content { display: none; padding: 24px; max-width: 1200px; margin: 0 auto; }
-  .tab-content.active { display: block; }
-  .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border: 1px solid #eee; }
-  .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.12); transition: box-shadow 0.2s; }
-  .email-row { display: flex; align-items: flex-start; gap: 12px; padding: 14px 0; border-bottom: 1px solid #f0f0f0; cursor: pointer; }
-  .email-row:last-child { border-bottom: none; }
-  .email-row:hover { background: #fafafa; margin: 0 -20px; padding: 14px 20px; border-radius: 8px; }
-  .priority-badge { min-width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: white; flex-shrink: 0; }
-  .p1 { background: #e63946; } .p2 { background: #f4a261; } .p3 { background: #2196F3; } .p4 { background: #4caf50; } .p5 { background: #9e9e9e; }
-  .urgency-critical { background: #e63946; } .urgency-high { background: #f4a261; } .urgency-medium { background: #2196F3; } .urgency-low { background: #4caf50; }
-  .email-info { flex: 1; min-width: 0; }
-  .email-from { font-weight: 600; font-size: 14px; color: #1a1a2e; }
-  .email-subject { font-size: 13px; color: #444; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .email-meta { font-size: 11px; color: #999; margin-top: 4px; }
-  .email-snippet { font-size: 12px; color: #666; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .action-tag { display: inline-block; background: #fff3e0; color: #e65100; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 500; margin-top: 6px; }
-  .deadline-tag { display: inline-block; background: #fce4ec; color: #c62828; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 500; margin-left: 4px; }
-  .category-section { margin-bottom: 24px; }
-  .category-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-  .category-title { font-size: 16px; font-weight: 700; color: #1a1a2e; }
-  .category-count { background: #e8eaf6; color: #3949ab; border-radius: 12px; padding: 2px 10px; font-size: 12px; font-weight: 600; }
-  .summary-text { font-size: 13px; color: #555; line-height: 1.6; margin-bottom: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 3px solid #1a1a2e; }
-  .action-items { list-style: none; }
-  .action-items li { padding: 6px 0; font-size: 13px; color: #333; display: flex; align-items: flex-start; gap: 8px; }
-  .action-items li::before { content: "to"; color: #e63946; font-weight: 700; flex-shrink: 0; }
-  .stat-row { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
-  .stat-card { background: white; border-radius: 10px; padding: 16px 20px; flex: 1; min-width: 120px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
-  .stat-number { font-size: 28px; font-weight: 700; color: #1a1a2e; }
-  .stat-label { font-size: 12px; color: #888; margin-top: 4px; }
-  .load-btn { background: linear-gradient(135deg, #1a1a2e, #e63946); color: white; border: none; padding: 12px 28px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; margin: 0 auto 24px; transition: all 0.2s; }
-  .load-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(230,57,70,0.3); }
-  .load-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-  .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .error-msg { background: #ffebee; border: 1px solid #ffcdd2; color: #c62828; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; }
-  .empty-state { text-align: center; padding: 48px 24px; color: #888; }
-  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
-  .gmail-link { color: #1a73e8; text-decoration: none; font-size: 12px; }
-  .gmail-link:hover { text-decoration: underline; }
-  .recommended-step { background: #e8f5e9; border-left: 3px solid #4caf50; padding: 8px 12px; border-radius: 0 6px 6px 0; font-size: 12px; color: #2e7d32; margin-top: 6px; }
-  .filter-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
-  .filter-chip { padding: 5px 14px; border-radius: 20px; border: 1px solid #ddd; background: white; font-size: 12px; cursor: pointer; transition: all 0.15s; }
-  .filter-chip.active, .filter-chip:hover { background: #1a1a2e; color: white; border-color: #1a1a2e; }
-  .section-title { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #888; margin-bottom: 12px; }
-  .pending-badge { background: #fff8e1; color: #f57f17; border-radius: 4px; padding: 2px 6px; font-size: 11px; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blume VC — Inbox Triage</title>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; color: #1a1a2e; }
+    header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: white; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+    header h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+    header .subtitle { font-size: 12px; opacity: 0.7; margin-top: 2px; }
+    #signInBtn { background: white; color: #1a1a2e; border: none; padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; }
+    #signInBtn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+    #signInBtn.signed-in { background: #e8f5e9; color: #2e7d32; }
+    .tabs { background: white; border-bottom: 2px solid #e0e0e0; padding: 0 24px; display: flex; gap: 0; }
+    .tab-btn { padding: 14px 20px; border: none; background: none; cursor: pointer; font-size: 14px; font-weight: 500; color: #666; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.2s; white-space: nowrap; }
+    .tab-btn:hover { color: #1a1a2e; background: #f5f5f5; }
+    .tab-btn.active { color: #1a1a2e; border-bottom-color: #e63946; font-weight: 600; }
+    .tab-content { display: none; padding: 24px; max-width: 1200px; margin: 0 auto; }
+    .tab-content.active { display: block; }
+    .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border: 1px solid #eee; }
+    .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.12); transition: box-shadow 0.2s; }
+    .email-row { display: flex; align-items: flex-start; gap: 12px; padding: 14px 0; border-bottom: 1px solid #f0f0f0; cursor: pointer; }
+    .email-row:last-child { border-bottom: none; }
+    .email-row:hover { background: #fafafa; margin: 0 -20px; padding: 14px 20px; border-radius: 8px; }
+    .priority-badge { min-width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: white; flex-shrink: 0; }
+    .p1 { background: #e63946; } .p2 { background: #f4a261; } .p3 { background: #2196F3; } .p4 { background: #4caf50; } .p5 { background: #9e9e9e; }
+    .urgency-critical { background: #e63946; } .urgency-high { background: #f4a261; } .urgency-medium { background: #2196F3; } .urgency-low { background: #4caf50; }
+    .email-info { flex: 1; min-width: 0; }
+    .email-from { font-weight: 600; font-size: 14px; color: #1a1a2e; }
+    .email-subject { font-size: 13px; color: #444; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .email-meta { font-size: 11px; color: #999; margin-top: 4px; }
+    .email-snippet { font-size: 12px; color: #666; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .action-tag { display: inline-block; background: #fff3e0; color: #e65100; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 500; margin-top: 6px; }
+    .deadline-tag { display: inline-block; background: #fce4ec; color: #c62828; border-radius: 4px; padding: 2px 8px; font-size: 11px; font-weight: 500; margin-left: 4px; }
+    .category-section { margin-bottom: 24px; }
+    .category-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .category-title { font-size: 16px; font-weight: 700; color: #1a1a2e; }
+    .category-count { background: #e8eaf6; color: #3949ab; border-radius: 12px; padding: 2px 10px; font-size: 12px; font-weight: 600; }
+    .summary-text { font-size: 13px; color: #555; line-height: 1.6; margin-bottom: 12px; padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 3px solid #1a1a2e; }
+    .action-items { list-style: none; }
+    .action-items li { padding: 6px 0; font-size: 13px; color: #333; display: flex; align-items: flex-start; gap: 8px; }
+    .action-items li::before { content: "→"; color: #e63946; font-weight: 700; flex-shrink: 0; }
+    .stat-row { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+    .stat-card { background: white; border-radius: 10px; padding: 16px 20px; flex: 1; min-width: 120px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    .stat-number { font-size: 28px; font-weight: 700; color: #1a1a2e; }
+    .stat-label { font-size: 12px; color: #888; margin-top: 4px; }
+    .load-btn { background: linear-gradient(135deg, #1a1a2e, #e63946); color: white; border: none; padding: 12px 28px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; margin: 0 auto 24px; transition: all 0.2s; }
+    .load-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(230, 57, 70, 0.3); }
+    .load-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .spinner { width: 18px; height: 18px; border: 2px solid rgba(255, 255, 255, 0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .error-msg { background: #ffebee; border: 1px solid #ffcdd2; color: #c62828; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; }
+    .empty-state { text-align: center; padding: 48px 24px; color: #888; }
+    .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+    .gmail-link { color: #1a73e8; text-decoration: none; font-size: 12px; }
+    .gmail-link:hover { text-decoration: underline; }
+    .recommended-step { background: #e8f5e9; border-left: 3px solid #4caf50; padding: 8px 12px; border-radius: 0 6px 6px 0; font-size: 12px; color: #2e7d32; margin-top: 6px; }
+    .filter-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .filter-chip { padding: 5px 14px; border-radius: 20px; border: 1px solid #ddd; background: white; font-size: 12px; cursor: pointer; transition: all 0.15s; }
+    .filter-chip.active, .filter-chip:hover { background: #1a1a2e; color: white; border-color: #1a1a2e; }
+    .section-title { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #888; margin-bottom: 12px; }
+    .pending-badge { background: #fff8e1; color: #f57f17; border-radius: 4px; padding: 2px 6px; font-size: 11px; }
+  </style>
 </head>
 <body>
-<header>
-  <div>
-    <h1>Blume VC - Inbox Triage</h1>
-    <div class="subtitle">AI-powered email prioritization for finance, compliance and operations</div>
+  <header>
+    <div>
+      <h1>Blume VC - Inbox Triage</h1>
+      <div class="subtitle">AI-powered email prioritization for finance, compliance and operations</div>
+    </div>
+    <button id="signInBtn" onclick="handleSignIn()">Sign in with Google</button>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('yesterday', this)">Yesterday Summary</button>
+    <button class="tab-btn" onclick="switchTab('urgent', this)">Immediate Action</button>
+    <button class="tab-btn" onclick="switchTab('all', this)">All Emails</button>
   </div>
-  <button id="signInBtn" onclick="handleSignIn()">Sign in with Google</button>
-</header>
-<div class="tabs">
-  <button class="tab-btn active" onclick="switchTab('yesterday',this)">Yesterday Summary</button>
-  <button class="tab-btn" onclick="switchTab('urgent',this)">Immediate Action</button>
-  <button class="tab-btn" onclick="switchTab('all',this)">All Emails</button>
-</div>
-<div id="tab-yesterday" class="tab-content active">
-  <div style="text-align:center;padding:8px 0 20px">
-    <button class="load-btn" id="yesterdayBtn" onclick="loadYesterdaySummary()">Generate Yesterday Summary</button>
+
+  <div id="tab-yesterday" class="tab-content active">
+    <div style="text-align:center;padding:8px 0 20px">
+      <button class="load-btn" id="yesterdayBtn" onclick="loadYesterdaySummary()">Generate Yesterday Summary</button>
+    </div>
+    <div id="yesterdayError"></div>
+    <div id="yesterdayContent"></div>
   </div>
-  <div id="yesterdayError"></div>
-  <div id="yesterdayContent"></div>
-</div>
-<div id="tab-urgent" class="tab-content">
-  <div style="text-align:center;padding:8px 0 20px">
-    <button class="load-btn" id="urgentBtn" onclick="loadUrgentEmails()">Scan for Urgent Emails</button>
+
+  <div id="tab-urgent" class="tab-content">
+    <div style="text-align:center;padding:8px 0 20px">
+      <button class="load-btn" id="urgentBtn" onclick="loadUrgentEmails()">Scan for Urgent Emails</button>
+    </div>
+    <div id="urgentError"></div>
+    <div id="urgentContent"></div>
   </div>
-  <div id="urgentError"></div>
-  <div id="urgentContent"></div>
-</div>
-<div id="tab-all" class="tab-content">
-  <div style="text-align:center;padding:8px 0 20px">
-    <button class="load-btn" id="allBtn" onclick="loadAllEmails()">Load All Emails</button>
+
+  <div id="tab-all" class="tab-content">
+    <div style="text-align:center;padding:8px 0 20px">
+      <button class="load-btn" id="allBtn" onclick="loadAllEmails()">Load All Emails</button>
+    </div>
+    <div id="allError"></div>
+    <div class="filter-row" id="filterRow" style="display:none">
+      <span class="filter-chip active" onclick="filterEmails('all', this)">All</span>
+      <span class="filter-chip" onclick="filterEmails('P1', this)">P1 Critical</span>
+      <span class="filter-chip" onclick="filterEmails('P2', this)">P2 High</span>
+      <span class="filter-chip" onclick="filterEmails('P3', this)">P3 Medium</span>
+      <span class="filter-chip" onclick="filterEmails('P4', this)">P4 Low</span>
+      <span class="filter-chip" onclick="filterEmails('P5', this)">P5 FYI</span>
+    </div>
+    <div id="allEmailsContainer"></div>
   </div>
-  <div id="allError"></div>
-  <div class="filter-row" id="filterRow" style="display:none">
-    <span class="filter-chip active" onclick="filterEmails('all',this)">All</span>
-    <span class="filter-chip" onclick="filterEmails('P1',this)">P1 Critical</span>
-    <span class="filter-chip" onclick="filterEmails('P2',this)">P2 High</span>
-    <span class="filter-chip" onclick="filterEmails('P3',this)">P3 Medium</span>
-    <span class="filter-chip" onclick="filterEmails('P4',this)">P4 Low</span>
-    <span class="filter-chip" onclick="filterEmails('P5',this)">P5 FYI</span>
-  </div>
-  <div id="allEmailsContainer"></div>
-</div>
-<script>
-const CLIENT_ID='810845823256-1gsm8sivbdjrovkoeedlaek9rulrtliv.apps.googleusercontent.com';
-const SCOPES='https://www.googleapis.com/auth/gmail.readonly';
-const API_BASE=window.location.origin;
-let tokenClient,accessToken=null,allEmailsData=[];
 
-window.onload=function(){
-  google.accounts.id.initialize({client_id:CLIENT_ID});
-  tokenClient=google.accounts.oauth2.initTokenClient({
-    client_id:CLIENT_ID,scope:SCOPES,
-    callback:(resp)=>{
-      if(resp.error){showError('auth','Sign-in failed: '+resp.error);return;}
-      accessToken=resp.access_token;
-      const btn=document.getElementById('signInBtn');
-      btn.textContent='Signed In';btn.classList.add('signed-in');
-    }
-  });
-};
+  <script>
+    const CLIENT_ID = '810845823256-1gsm8sivbdjrovkoeedlaek9rulrtliv.apps.googleusercontent.com';
+    const SCOPES = 'https://www.googleapis.com/auth/gmail.readonly';
+    const API_BASE = window.location.origin;
+    let tokenClient, accessToken = null, allEmailsData = [];
 
-function handleSignIn(){if(!tokenClient){alert('Google auth not ready');return;}tokenClient.requestAccessToken();}
-function requireAuth(){if(!accessToken){handleSignIn();return false;}return true;}
-
-async function callAPI(endpoint,body){
-  const resp=await fetch(API_BASE+endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-  if(!resp.ok){const e=await resp.json().catch(()=>({error:resp.statusText}));throw new Error(e.error||'API error '+resp.status);}
-  return resp.json();
-}
-
-function showError(zone,msg){const el=document.getElementById(zone+'Error');if(el)el.innerHTML='<div class="error-msg">'+msg+'</div>';}
-function clearError(zone){const el=document.getElementById(zone+'Error');if(el)el.innerHTML='';}
-
-function setLoading(btnId,loading){
-  const btn=document.getElementById(btnId);if(!btn)return;
-  btn.disabled=loading;
-  if(loading){btn.dataset.orig=btn.innerHTML;btn.innerHTML='<div class="spinner"></div> Loading...';}
-  else{btn.innerHTML=btn.dataset.orig||btn.innerHTML;}
-}
-
-function switchTab(tab,btn){
-  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('tab-'+tab).classList.add('active');btn.classList.add('active');
-}
-
-function openInGmail(tid){window.open('https://mail.google.com/mail/u/0/#inbox/'+tid,'_blank');}
-
-async function loadYesterdaySummary(){
-  if(!requireAuth())return;clearError('yesterday');setLoading('yesterdayBtn',true);
-  document.getElementById('yesterdayContent').innerHTML='';
-  try{const data=await callAPI('/api/yesterday-summary',{accessToken});renderYesterdaySummary(data.summary);}
-  catch(e){showError('yesterday',e.message);}finally{setLoading('yesterdayBtn',false);}
-}
-
-function renderYesterdaySummary(summary){
-  if(!summary||summary.totalUnread===0){document.getElementById('yesterdayContent').innerHTML='<div class="empty-state"><div class="icon">No unread emails from yesterday.</div></div>';return;}
-  const cats=summary.categories||{};const catKeys=Object.keys(cats);
-  const totalActions=catKeys.reduce((s,k)=>s+(cats[k].actionItems||[]).length,0);
-  let html='<div class="stat-row">';
-  html+='<div class="stat-card"><div class="stat-number">'+summary.totalUnread+'</div><div class="stat-label">Unread Yesterday</div></div>';
-  html+='<div class="stat-card"><div class="stat-number">'+catKeys.length+'</div><div class="stat-label">Categories</div></div>';
-  html+='<div class="stat-card"><div class="stat-number">'+totalActions+'</div><div class="stat-label">Action Items</div></div></div>';
-  const catOrder=['Compliance','Investors','Banks','Portfolio Companies','Internal','Vendors/FYI'];
-  const sorted=[...catOrder.filter(c=>cats[c]),...catKeys.filter(c=>!catOrder.includes(c))];
-  const icons={Compliance:'⚖️',Investors:'💼',Banks:'🏦','Portfolio Companies':'🚀',Internal:'🏠','Vendors/FYI':'📋'};
-  for(const cat of sorted){
-    const d=cats[cat];if(!d)continue;
-    const icon=icons[cat]||'📁';
-    html+='<div class="card category-section"><div class="category-header">';
-    html+='<div class="category-title">'+icon+' '+escHtml(cat)+'</div>';
-    html+='<div style="display:flex;gap:8px;align-items:center"><span class="pending-badge">'+(d.pendingResponses||0)+' pending</span>';
-    html+='<span class="category-count">'+d.count+' emails</span></div></div>';
-    if(d.summary)html+='<div class="summary-text">'+escHtml(d.summary)+'</div>';
-    if(d.criticalDeadlines&&d.criticalDeadlines.length){
-      html+='<div class="section-title" style="margin-top:12px">Critical Deadlines</div>';
-      d.criticalDeadlines.forEach(dl=>{html+='<span class="deadline-tag">'+escHtml(dl)+'</span>';});
-    }
-    if(d.actionItems&&d.actionItems.length){
-      html+='<div class="section-title" style="margin-top:12px">Action Items</div><ul class="action-items">';
-      d.actionItems.forEach(item=>{html+='<li>'+escHtml(item)+'</li>';});
-      html+='</ul>';
-    }
-    if(d.emails&&d.emails.length){
-      html+='<div class="section-title" style="margin-top:12px">Emails</div>';
-      d.emails.forEach(e=>{
-        html+='<div class="email-row" onclick="openInGmail(''+e.threadId+'')">';
-        html+='<div style="width:36px;height:36px;border-radius:50%;background:#e8eaf6;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">'+icon+'</div>';
-        html+='<div class="email-info"><div class="email-from">'+escHtml(e.from)+'</div>';
-        html+='<div class="email-subject">'+escHtml(e.subject)+'</div>';
-        if(e.snippet)html+='<div class="email-snippet">'+escHtml(e.snippet)+'</div>';
-        html+='</div></div>';
+    window.onload = function() {
+      google.accounts.id.initialize({ client_id: CLIENT_ID });
+      tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: SCOPES,
+        callback: (resp) => {
+          if (resp.error) {
+            showError('auth', 'Sign-in failed: ' + resp.error);
+            return;
+          }
+          accessToken = resp.access_token;
+          const btn = document.getElementById('signInBtn');
+          btn.textContent = 'Signed In';
+          btn.classList.add('signed-in');
+        }
       });
+    };
+
+    function handleSignIn() {
+      if (!tokenClient) {
+        alert('Google auth not ready');
+        return;
+      }
+      tokenClient.requestAccessToken();
     }
-    html+='</div>';
-  }
-  document.getElementById('yesterdayContent').innerHTML=html;
-}
 
-async function loadUrgentEmails(){
-  if(!requireAuth())return;clearError('urgent');setLoading('urgentBtn',true);
-  document.getElementById('urgentContent').innerHTML='';
-  try{const data=await callAPI('/api/classify-urgent',{accessToken});renderUrgentEmails(data);}
-  catch(e){showError('urgent',e.message);}finally{setLoading('urgentBtn',false);}
-}
+    function requireAuth() {
+      if (!accessToken) {
+        handleSignIn();
+        return false;
+      }
+      return true;
+    }
 
-function renderUrgentEmails(data){
-  const urgent=data.urgent||[];
-  if(!urgent.length){document.getElementById('urgentContent').innerHTML='<div class="empty-state"><div class="icon">No urgent emails requiring immediate action.</div></div>';return;}
-  let html='<div class="stat-row">';
-  html+='<div class="stat-card"><div class="stat-number">'+urgent.length+'</div><div class="stat-label">Urgent Items</div></div>';
-  const critical=urgent.filter(e=>e.urgency==='CRITICAL').length;
-  const high=urgent.filter(e=>e.urgency==='HIGH').length;
-  html+='<div class="stat-card"><div class="stat-number" style="color:#e63946">'+critical+'</div><div class="stat-label">Critical</div></div>';
-  html+='<div class="stat-card"><div class="stat-number" style="color:#f4a261">'+high+'</div><div class="stat-label">High</div></div></div>';
-  html+='<div class="card">';
-  urgent.forEach(e=>{
-    const uc='urgency-'+e.urgency.toLowerCase();
-    html+='<div class="email-row" onclick="openInGmail(''+e.threadId+'')">';
-    html+='<div class="priority-badge '+uc+'">'+e.urgency.substring(0,1)+'</div>';
-    html+='<div class="email-info"><div class="email-from">'+escHtml(e.from)+'</div>';
-    html+='<div class="email-subject">'+escHtml(e.subject)+'</div>';
-    html+='<div class="email-meta">'+escHtml(e.categoryLabel||e.category||'')+' · '+(e.responseTimeframe||'')+(e.messageCount>1?' · '+e.messageCount+' msgs':'')+'</div>';
-    if(e.actionDescription)html+='<div><span class="action-tag">'+escHtml(e.actionDescription)+'</span>'+(e.deadline?'<span class="deadline-tag">'+escHtml(e.deadline)+'</span>':'')+'</div>';
-    if(e.recommendedNextStep)html+='<div class="recommended-step">'+escHtml(e.recommendedNextStep)+'</div>';
-    html+='</div><a class="gmail-link" href="https://mail.google.com/mail/u/0/#inbox/'+e.threadId+'" target="_blank" onclick="event.stopPropagation()">Open</a></div>';
-  });
-  html+='</div>';
-  document.getElementById('urgentContent').innerHTML=html;
-}
+    async function callAPI(endpoint, body) {
+      const resp = await fetch(API_BASE + endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (!resp.ok) {
+        const e = await resp.json().catch(() => ({ error: resp.statusText }));
+        throw new Error(e.error || 'API error ' + resp.status);
+      }
+      return resp.json();
+    }
 
-async function loadAllEmails(){
-  if(!requireAuth())return;clearError('all');setLoading('allBtn',true);
-  document.getElementById('allEmailsContainer').innerHTML='';
-  document.getElementById('filterRow').style.display='none';
-  try{
-    const since=Math.floor(Date.now()/1000)-7*86400;
-    const resp=await fetch('https://www.googleapis.com/gmail/v1/users/me/threads?maxResults=50&q=in:inbox+is:unread+after:'+since+'&fields=threads(id,snippet,messages(id,payload(headers)))',{headers:{Authorization:'Bearer '+accessToken}});
-    if(resp.status===401)throw new Error('Gmail session expired');
-    const data=await resp.json();
-    const threads=data.threads||[];
-    allEmailsData=threads.map(t=>{
-      const msg=t.messages?.[0];const headers=msg?.payload?.headers||[];
-      const from=headers.find(h=>h.name.toLowerCase()==='from')?.value||'';
-      const subject=headers.find(h=>h.name.toLowerCase()==='subject')?.value||'(no subject)';
-      return{threadId:t.id,from:extractName(from),subject,snippet:t.snippet||'',priority:classifyPriority(from,subject,t.snippet||'')};
-    });
-    allEmailsData.sort((a,b)=>a.priority.level-b.priority.level);
-    document.getElementById('filterRow').style.display='flex';
-    renderAllEmails(allEmailsData);
-  }catch(e){showError('all',e.message);}finally{setLoading('allBtn',false);}
-}
+    function showError(zone, msg) {
+      const el = document.getElementById(zone + 'Error');
+      if (el) el.innerHTML = '<div class="error-msg">' + msg + '</div>';
+    }
 
-function classifyPriority(from,subject,snippet){
-  const text=(from+' '+subject+' '+snippet).toLowerCase();
-  if(/sebi|regulatory|compliance|audit|aml|kyc|fatca|penalty|show cause/i.test(text)&&/urgent|asap|deadline|critical/i.test(text))return{level:1,label:'P1',desc:'Critical Compliance'};
-  if(/investor|lp |capital call|drawdown|nav/i.test(text)&&/urgent|asap|deadline/i.test(text))return{level:1,label:'P1',desc:'Critical Investor'};
-  if(/approval|approve|sign off|authorize|pending your|require your/i.test(text))return{level:1,label:'P1',desc:'Approval Required'};
-  if(/sebi|regulatory|compliance|audit|aml|kyc|fatca|ckyc|penalty/i.test(text))return{level:2,label:'P2',desc:'Compliance'};
-  if(/investor|lp |limited partner|capital call|sequoia|accel|a16z/i.test(text))return{level:2,label:'P2',desc:'Investor'};
-  if(/urgent|asap|deadline|overdue|critical|escalat/i.test(text))return{level:2,label:'P2',desc:'Urgent'};
-  if(/bank|payment|wire|neft|rtgs|settlement|invoice/i.test(text))return{level:3,label:'P3',desc:'Finance/Banking'};
-  if(/portfolio|founder|cfo|board|mis|term sheet/i.test(text))return{level:3,label:'P3',desc:'Portfolio'};
-  if(/internal|blume|team|meeting|review/i.test(text))return{level:4,label:'P4',desc:'Internal'};
-  return{level:5,label:'P5',desc:'FYI/Vendor'};
-}
+    function clearError(zone) {
+      const el = document.getElementById(zone + 'Error');
+      if (el) el.innerHTML = '';
+    }
 
-function extractName(from){return from.replace(/<[^>]*>/g,'').trim()||from.split('@')[0];}
+    function setLoading(btnId, loading) {
+      const btn = document.getElementById(btnId);
+      if (!btn) return;
+      btn.disabled = loading;
+      if (loading) {
+        btn.dataset.orig = btn.innerHTML;
+        btn.innerHTML = '<div class="spinner"></div> Loading...';
+      } else {
+        btn.innerHTML = btn.dataset.orig || btn.innerHTML;
+      }
+    }
 
-function filterEmails(filter,chip){
-  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));chip.classList.add('active');
-  const filtered=filter==='all'?allEmailsData:allEmailsData.filter(e=>e.priority.label===filter);
-  renderAllEmails(filtered);
-}
+    function switchTab(tab, btn) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('tab-' + tab).classList.add('active');
+      btn.classList.add('active');
+    }
 
-function renderAllEmails(emails){
-  if(!emails.length){document.getElementById('allEmailsContainer').innerHTML='<div class="empty-state">No emails found.</div>';return;}
-  const pColors={P1:'p1',P2:'p2',P3:'p3',P4:'p4',P5:'p5'};
-  let html='<div class="card">';
-  emails.forEach(e=>{
-    const cls=pColors[e.priority.label]||'p5';
-    html+='<div class="email-row" onclick="openInGmail(''+e.threadId+'')">';
-    html+='<div class="priority-badge '+cls+'">'+e.priority.label+'</div>';
-    html+='<div class="email-info"><div class="email-from">'+escHtml(e.from)+'</div>';
-    html+='<div class="email-subject">'+escHtml(e.subject)+'</div>';
-    html+='<div class="email-meta">'+escHtml(e.priority.desc)+'</div>';
-    if(e.snippet)html+='<div class="email-snippet">'+escHtml(e.snippet)+'</div>';
-    html+='</div><a class="gmail-link" href="https://mail.google.com/mail/u/0/#inbox/'+e.threadId+'" target="_blank" onclick="event.stopPropagation()">Open</a></div>';
-  });
-  html+='</div>';
-  document.getElementById('allEmailsContainer').innerHTML=html;
-}
+    function openInGmail(tid) {
+      window.open('https://mail.google.com/mail/u/0/#inbox/' + tid, '_blank');
+    }
 
-function escHtml(str){if(!str)return'';return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-</script>
+    async function loadYesterdaySummary() {
+      if (!requireAuth()) return;
+      clearError('yesterday');
+      setLoading('yesterdayBtn', true);
+      document.getElementById('yesterdayContent').innerHTML = '';
+      try {
+        const data = await callAPI('/api/yesterday-summary', { accessToken });
+        renderYesterdaySummary(data.summary);
+      } catch (e) {
+        showError('yesterday', e.message);
+      } finally {
+        setLoading('yesterdayBtn', false);
+      }
+    }
+
+    function renderYesterdaySummary(summary) {
+      if (!summary || summary.totalUnread === 0) {
+        document.getElementById('yesterdayContent').innerHTML = '<div class="empty-state"><div class="icon">📭</div><div>No unread emails from yesterday.</div></div>';
+        return;
+      }
+      const cats = summary.categories || {};
+      const catKeys = Object.keys(cats);
+      const totalActions = catKeys.reduce((s, k) => s + (cats[k].actionItems || []).length, 0);
+
+      let html = '<div class="stat-row">';
+      html += '<div class="stat-card"><div class="stat-number">' + summary.totalUnread + '</div><div class="stat-label">Unread Yesterday</div></div>';
+      html += '<div class="stat-card"><div class="stat-number">' + catKeys.length + '</div><div class="stat-label">Categories</div></div>';
+      html += '<div class="stat-card"><div class="stat-number">' + totalActions + '</div><div class="stat-label">Action Items</div></div></div>';
+
+      const catOrder = ['Compliance', 'Investors', 'Banks', 'Portfolio Companies', 'Internal', 'Vendors/FYI'];
+      const sorted = [...catOrder.filter(c => cats[c]), ...catKeys.filter(c => !catOrder.includes(c))];
+      const icons = {
+        'Compliance': '⚖️',
+        'Investors': '💼',
+        'Banks': '🏦',
+        'Portfolio Companies': '🚀',
+        'Internal': '🏠',
+        'Vendors/FYI': '📋'
+      };
+
+      for (const cat of sorted) {
+        const d = cats[cat];
+        if (!d) continue;
+        const icon = icons[cat] || '📁';
+        html += '<div class="card category-section"><div class="category-header">';
+        html += '<div class="category-title">' + icon + ' ' + escHtml(cat) + '</div>';
+        html += '<div style="display:flex;gap:8px;align-items:center"><span class="pending-badge">' + (d.pendingResponses || 0) + ' pending</span>';
+        html += '<span class="category-count">' + d.count + ' emails</span></div></div>';
+
+        if (d.summary) html += '<div class="summary-text">' + escHtml(d.summary) + '</div>';
+
+        if (d.criticalDeadlines && d.criticalDeadlines.length) {
+          html += '<div class="section-title" style="margin-top:12px">Critical Deadlines</div>';
+          d.criticalDeadlines.forEach(dl => {
+            html += '<span class="deadline-tag">' + escHtml(dl) + '</span>';
+          });
+        }
+
+        if (d.actionItems && d.actionItems.length) {
+          html += '<div class="section-title" style="margin-top:12px">Action Items</div><ul class="action-items">';
+          d.actionItems.forEach(item => {
+            html += '<li>' + escHtml(item) + '</li>';
+          });
+          html += '</ul>';
+        }
+
+        if (d.emails && d.emails.length) {
+          html += '<div class="section-title" style="margin-top:12px">Emails</div>';
+          d.emails.forEach(e => {
+            html += '<div class="email-row" onclick="openInGmail(\'' + e.threadId + '\')">';
+            html += '<div style="width:36px;height:36px;border-radius:50%;background:#e8eaf6;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">' + icon + '</div>';
+            html += '<div class="email-info"><div class="email-from">' + escHtml(e.from) + '</div>';
+            html += '<div class="email-subject">' + escHtml(e.subject) + '</div>';
+            if (e.snippet) html += '<div class="email-snippet">' + escHtml(e.snippet) + '</div>';
+            html += '</div></div>';
+          });
+        }
+        html += '</div>';
+      }
+      document.getElementById('yesterdayContent').innerHTML = html;
+    }
+
+    async function loadUrgentEmails() {
+      if (!requireAuth()) return;
+      clearError('urgent');
+      setLoading('urgentBtn', true);
+      document.getElementById('urgentContent').innerHTML = '';
+      try {
+        const data = await callAPI('/api/classify-urgent', { accessToken });
+        renderUrgentEmails(data);
+      } catch (e) {
+        showError('urgent', e.message);
+      } finally {
+        setLoading('urgentBtn', false);
+      }
+    }
+
+    function renderUrgentEmails(data) {
+      const urgent = data.urgent || [];
+      if (!urgent.length) {
+        document.getElementById('urgentContent').innerHTML = '<div class="empty-state"><div class="icon">✅</div><div>No urgent emails requiring immediate action.</div></div>';
+        return;
+      }
+      let html = '<div class="stat-row">';
+      html += '<div class="stat-card"><div class="stat-number">' + urgent.length + '</div><div class="stat-label">Urgent Items</div></div>';
+      const critical = urgent.filter(e => e.urgency === 'CRITICAL').length;
+      const high = urgent.filter(e => e.urgency === 'HIGH').length;
+      html += '<div class="stat-card"><div class="stat-number" style="color:#e63946">' + critical + '</div><div class="stat-label">Critical</div></div>';
+      html += '<div class="stat-card"><div class="stat-number" style="color:#f4a261">' + high + '</div><div class="stat-label">High</div></div></div>';
+      html += '<div class="card">';
+      urgent.forEach(e => {
+        const uc = 'urgency-' + e.urgency.toLowerCase();
+        html += '<div class="email-row" onclick="openInGmail(\'' + e.threadId + '\')">';
+        html += '<div class="priority-badge ' + uc + '">' + e.urgency.substring(0, 1) + '</div>';
+        html += '<div class="email-info"><div class="email-from">' + escHtml(e.from) + '</div>';
+        html += '<div class="email-subject">' + escHtml(e.subject) + '</div>';
+        html += '<div class="email-meta">' + escHtml(e.categoryLabel || e.category || '') + ' · ' + (e.responseTimeframe || '') + (e.messageCount > 1 ? ' · ' + e.messageCount + ' msgs' : '') + '</div>';
+        if (e.actionDescription) html += '<div><span class="action-tag">' + escHtml(e.actionDescription) + '</span>' + (e.deadline ? '<span class="deadline-tag">' + escHtml(e.deadline) + '</span>' : '') + '</div>';
+        if (e.recommendedNextStep) html += '<div class="recommended-step">' + escHtml(e.recommendedNextStep) + '</div>';
+        html += '<a class="gmail-link" href="https://mail.google.com/mail/u/0/#inbox/' + e.threadId + '" target="_blank" onclick="event.stopPropagation()">Open</a></div>';
+        html += '</div>';
+      });
+      html += '</div>';
+      document.getElementById('urgentContent').innerHTML = html;
+    }
+
+    async function loadAllEmails() {
+      if (!requireAuth()) return;
+      clearError('all');
+      setLoading('allBtn', true);
+      document.getElementById('allEmailsContainer').innerHTML = '';
+      document.getElementById('filterRow').style.display = 'none';
+      try {
+        const since = Math.floor(Date.now() / 1000) - 7 * 86400;
+        const resp = await fetch('https://www.googleapis.com/gmail/v1/users/me/threads?maxResults=50&q=in:inbox+is:unread+after:' + since + '&fields=threads(id,snippet,messages(id,payload(headers)))', {
+          headers: { Authorization: 'Bearer ' + accessToken }
+        });
+        if (resp.status === 401) throw new Error('Gmail session expired');
+        const data = await resp.json();
+        const threads = data.threads || [];
+        allEmailsData = threads.map(t => {
+          const msg = t.messages?.[0];
+          const headers = msg?.payload?.headers || [];
+          const from = headers.find(h => h.name.toLowerCase() === 'from')?.value || '';
+          const subject = headers.find(h => h.name.toLowerCase() === 'subject')?.value || '(no subject)';
+          return {
+            threadId: t.id,
+            from: extractName(from),
+            subject,
+            snippet: t.snippet || '',
+            priority: classifyPriority(from, subject, t.snippet || '')
+          };
+        });
+        allEmailsData.sort((a, b) => a.priority.level - b.priority.level);
+        document.getElementById('filterRow').style.display = 'flex';
+        renderAllEmails(allEmailsData);
+      } catch (e) {
+        showError('all', e.message);
+      } finally {
+        setLoading('allBtn', false);
+      }
+    }
+
+    function classifyPriority(from, subject, snippet) {
+      const text = (from + ' ' + subject + ' ' + snippet).toLowerCase();
+      if (/sebi|regulatory|compliance|audit|aml|kyc|fatca|penalty|show cause/i.test(text) && /urgent|asap|deadline|critical/i.test(text))
+        return { level: 1, label: 'P1', desc: 'Critical Compliance' };
+      if (/investor|lp |capital call|drawdown|nav/i.test(text) && /urgent|asap|deadline/i.test(text))
+        return { level: 1, label: 'P1', desc: 'Critical Investor' };
+      if (/approval|approve|sign off|authorize|pending your|require your/i.test(text))
+        return { level: 1, label: 'P1', desc: 'Approval Required' };
+      if (/sebi|regulatory|compliance|audit|aml|kyc|fatca|ckyc|penalty/i.test(text))
+        return { level: 2, label: 'P2', desc: 'Compliance' };
+      if (/investor|lp |limited partner|capital call|sequoia|accel|a16z/i.test(text))
+        return { level: 2, label: 'P2', desc: 'Investor' };
+      if (/urgent|asap|deadline|overdue|critical|escalat/i.test(text))
+        return { level: 2, label: 'P2', desc: 'Urgent' };
+      if (/bank|payment|wire|neft|rtgs|settlement|invoice/i.test(text))
+        return { level: 3, label: 'P3', desc: 'Finance/Banking' };
+      if (/portfolio|founder|cfo|board|mis|term sheet/i.test(text))
+        return { level: 3, label: 'P3', desc: 'Portfolio' };
+      if (/internal|blume|team|meeting|review/i.test(text))
+        return { level: 4, label: 'P4', desc: 'Internal' };
+      return { level: 5, label: 'P5', desc: 'FYI/Vendor' };
+    }
+
+    function extractName(from) {
+      return from.replace(/<[^>]*>/g, '').trim() || from.split('@')[0];
+    }
+
+    function filterEmails(filter, chip) {
+      document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      const filtered = filter === 'all' ? allEmailsData : allEmailsData.filter(e => e.priority.label === filter);
+      renderAllEmails(filtered);
+    }
+
+    function renderAllEmails(emails) {
+      if (!emails.length) {
+        document.getElementById('allEmailsContainer').innerHTML = '<div class="empty-state">No emails found.</div>';
+        return;
+      }
+      const pColors = { 'P1': 'p1', 'P2': 'p2', 'P3': 'p3', 'P4': 'p4', 'P5': 'p5' };
+      let html = '<div class="card">';
+      emails.forEach(e => {
+        const cls = pColors[e.priority.label] || 'p5';
+        html += '<div class="email-row" onclick="openInGmail(\'' + e.threadId + '\')">';
+        html += '<div class="priority-badge ' + cls + '">' + e.priority.label + '</div>';
+        html += '<div class="email-info"><div class="email-from">' + escHtml(e.from) + '</div>';
+        html += '<div class="email-subject">' + escHtml(e.subject) + '</div>';
+        html += '<div class="email-meta">' + escHtml(e.priority.desc) + '</div>';
+        if (e.snippet) html += '<div class="email-snippet">' + escHtml(e.snippet) + '</div>';
+        html += '<a class="gmail-link" href="https://mail.google.com/mail/u/0/#inbox/' + e.threadId + '" target="_blank" onclick="event.stopPropagation()">Open</a>';
+        html += '</div></div>';
+      });
+      html += '</div>';
+      document.getElementById('allEmailsContainer').innerHTML = html;
+    }
+
+    function escHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+  </script>
 </body>
 </html>
